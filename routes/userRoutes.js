@@ -18,6 +18,7 @@ router.use(bodyParser.urlencoded({ extended: true }));
 // default Route
 // Access: public
 // Url: http://localhost:500/api/users/
+// method: GET
 router.get('/', (req, res) => {
     return res.status(200).json({
         status: true,
@@ -31,6 +32,7 @@ router.get('/', (req, res) => {
 // user register route
 // Access: public
 // url: http://localhost:500/api/users/register
+// method: POST
 
 router.post('/register', [
     // check empty fields
@@ -50,9 +52,16 @@ router.post('/register', [
             errors: errors.array(),
         })
     }
+
+    // hashing password
+    const salt = bcrypt.genSaltSync(10)
+    const hashedPassword = bcrypt.hashSync(req.body.password, salt);
+    console.log(hashedPassword);
+
     return res.status(200).json({
         status: true,
         data: req.body,
+        hashedPassword: hashedPassword,
     })
 })
 

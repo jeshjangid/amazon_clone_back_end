@@ -53,15 +53,45 @@ router.post('/register', [
         })
     }
 
-    // hashing password
-    const salt = bcrypt.genSaltSync(10)
-    const hashedPassword = bcrypt.hashSync(req.body.password, salt);
-    console.log(hashedPassword);
+    // Check email already exists or not
+    User.findOne({ email: req.body.email }).then(user => {
+        // check email exists or not
+        if(user){
+            return res.status(409).json({
+                status: false,
+                message: 'User Email already exists'
+            })
+        }else{
 
-    return res.status(200).json({
-        status: true,
-        data: req.body,
-        hashedPassword: hashedPassword,
+            // hashing password
+            const salt = bcrypt.genSaltSync(10)
+            const hashedPassword = bcrypt.hashSync(req.body.password, salt);
+
+            // Create user object from user modal
+            const newUser = new User({
+                email: req.body.email,
+                username: req.body.username,
+                password: hashedPassword,
+            })
+
+            // Insert new User
+            newUser.save().then(result => {
+                return res.status(200).json({
+                    status: true,
+                    user: result
+                })
+            }).catch(error => {
+                return res.status(502).json({
+                    status: false,
+                    error: error
+                })
+            })
+        }
+    }).catch(error => {
+        return res.status(502).json({
+            status: false,
+            error: error
+        })
     })
 })
 

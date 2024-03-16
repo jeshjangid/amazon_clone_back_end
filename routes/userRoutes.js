@@ -9,6 +9,8 @@ const User = require('./../models/User');
 const token_key = process.env.TOKEN_KEY;
 
 
+const storage = require('./storage')
+
 
 // middleware Setup
 router.use(bodyParser.json());
@@ -50,6 +52,7 @@ router.post('/register', [
         return res.status(400).json({
             status: false,
             errors: errors.array(),
+            message: "Form validation error..."
         })
     }
 
@@ -93,6 +96,90 @@ router.post('/register', [
             error: error
         })
     })
+})
+
+// User profile pic upload Route
+// Access: public
+// Url: http://localhost:500/api/users/uploadProfilePic
+// method: POST
+router.post('/uploadProfilePic', (req, res) => {
+    let upload = storage.getProfilePicUpload();
+
+    upload(req, res, (error) => {
+        console.log(req.file);
+
+        if(error){
+            return res.status(400).json({
+                status: false,
+                error: error,
+                message: 'File upload failed...'
+            })
+        }else{
+
+        return res.status(200).json({
+            status: true,
+            message: 'File upload success'
+        })
+    }
+    })
+})
+
+
+// User login Route
+// Access: public
+// Url: http://localhost:500/api/users/login
+// method: POST
+router.post('/login', [
+    // check empty fields
+    check('password').not().isEmpty().trim().escape(),
+    
+    // check email 
+    check('email').isEmail().normalizeEmail(),
+    
+], (req, res) => {
+    const errors = validationResult(req);
+
+    // check errors is not empty
+    if(!errors.isEmpty()){
+        return res.status(400).json({
+            status: false,
+            errors: errors.array(),
+            message: "Form validation error..."
+        })
+    }
+
+    User.findOne({email: req.body.email}).then(user => {
+        // if user don't exists
+        if(!user){
+            return res.status(404).json({
+                status: false,
+                message: "User don't exists",
+            })
+        }else{
+            // match user password
+            let isPasswordMatch = bcrypt.compareSync(req.body.password, user.password);
+
+            // check is not password match
+            if(!isPasswordMatch){
+                return res.status(401).json({
+                    status: false,
+                    message: "Password don't match ...",
+                })
+            }
+
+            // if login success
+            return res.status(200).json({
+                status: true,
+                message: 'User login successfully',
+            })
+        }
+    }).catch(error => {
+        return res.status(502).json({
+            status: false,
+            message: "Database error...",
+        })
+    })
+    
 })
 
 

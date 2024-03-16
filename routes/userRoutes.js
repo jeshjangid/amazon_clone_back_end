@@ -167,10 +167,23 @@ router.post('/login', [
                 })
             }
 
+            // JSON Web Token Generate
+            let token = jwt.sign({
+                id: user._id,
+                email: user.email
+            },
+            token_key,
+            {
+                expiresIn: 3600
+            }
+            );
+
             // if login success
             return res.status(200).json({
                 status: true,
                 message: 'User login successfully',
+                token: token,
+                user: user
             })
         }
     }).catch(error => {

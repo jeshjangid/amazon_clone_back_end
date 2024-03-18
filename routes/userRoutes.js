@@ -226,10 +226,13 @@ router.post(
     // check email
     check('email').isEmail().normalizeEmail().withMessage("validation.invalid_email")
   ],
+
+
   (req, res) => {
     const errors = validationResult(req);
 
     // check errors is not empty
+   
     if (!errors.isEmpty()) {
 
       let error = {}
